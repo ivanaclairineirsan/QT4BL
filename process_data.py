@@ -47,7 +47,7 @@ def stem_text(text):
     return ' '.join(set(res))
 
 
-# In[75]:
+# In[78]:
 
 
 def preprocess_dataset(csv_path):
@@ -162,6 +162,14 @@ def generate_2d_matrix(matrix, br_vocab_id, sc_vocab_id):
         for sc_id in matrix[br_id]:
             token_matrix[int(br_id)][int(sc_id)] = 5.0
             
+def generate_training_file(matrix, br_token, sc_token):
+    temp = []
+    for br_token_id in matrix:
+        for sc_token_id in range(len(sc_token)):
+            if matrix[br_token_id].get(sc_token_id):
+                temp.append((br_token_id, sc_token_id, matrix[br_token_id].get(sc_token_id,0)))
+    return pd.DataFrame(temp, columns=['br_token', 'sc_token', 'score'])
+            
 file_path = '/Users/ivanaclairineirsan/Documents/Research/Bug Localization/IMSE2021/gen_csv_raw/Apache/CAMEL.csv'
 output_path = '/Users/ivanaclairineirsan/Documents/Research/QT4BL/data/Bench4BL/Apache/CAMEL'
 df = preprocess_dataset(file_path)
@@ -177,17 +185,5 @@ with open(f'{output_path}/br_dictionary.json', 'r') as f:
     br_vocab_id = json.load(f)
 
 matrix = build_compact_matrix(df, br_vocab_id, sc_vocab_id, br_tokens, sc_tokens)
-
-with open(f'{output_path}/train_matrix.json', 'w') as f:
-    f.write(json.dumps(matrix))
-    
-twoD_matrix = generate_2d_matrix(matrix, br_vocab_id, sc_vocab_id)
-
-
-# ### Training
-
-# In[ ]:
-
-
-
-
+train_df = generate_training_file(matrix,br_vocab_id,sc_vocab_id)
+train_df.to_csv('train_data.csv')
